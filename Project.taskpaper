@@ -1,0 +1,14 @@
+Tasks:
+✔ Create test art @done(2020-08-02 10:45)
+✔ Create scene @done(2020-08-02 11:21)
+✔ Add stretch-fill to Image component @done(2020-08-02 13:24)
+✔ Refactor Kludgine to have a "Control" event enum @started(2020-08-02 13:46) @done(2020-08-02 13:46) @lasted(57s)
+☐ Hook up rodio
+☐ Make a click track using a structure that will be able to be used when loading loop configurations
+☐ Create timekeeper that operates in beats
+☐ Create test audio tracks
+☐ Create loop manifest
+☐ Create main menu
+☐ Add ability to remove components to Kludgine
+
+Brainstorming:
