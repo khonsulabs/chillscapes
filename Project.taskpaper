@@ -3,10 +3,12 @@ Tasks:
 ✔ Create scene @done(2020-08-02 11:21)
 ✔ Add stretch-fill to Image component @done(2020-08-02 13:24)
 ✔ Refactor Kludgine to have a "Control" event enum @started(2020-08-02 13:46) @done(2020-08-02 13:46) @lasted(57s)
-☐ Hook up rodio
-☐ Make a click track using a structure that will be able to be used when loading loop configurations
-☐ Create timekeeper that operates in beats
-☐ Create test audio tracks
+✔ Hook up rodio @done(2020-08-03 07:04)
+✔ Make a click track using a structure that will be able to be used when loading loop configurations @done(2020-08-03 07:04)
+✔ Create timekeeper that operates in beats @done(2020-08-03 07:04)
+✘ Create test audio tracks @cancelled(2020-08-03 07:05) I'm ok with faking the click track for now
+☐ Sync element animation to the beat
+☐ Aspect fit/fill should use alignment from style
 ☐ Create loop manifest
 ☐ Create main menu
 ☐ Add ability to remove components to Kludgine

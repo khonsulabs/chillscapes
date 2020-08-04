@@ -166,13 +166,13 @@ impl Component for Game {
         Layout::absolute()
             .child(
                 self.backdrop,
-                AbsoluteBounds::from(Surround::uniform(Dimension::Points(0.))),
+                AbsoluteBounds::from(Surround::uniform(Dimension::from_points(0.))),
             )?
             .child(
                 self.star,
                 AbsoluteBounds {
-                    left: Dimension::Points(50.),
-                    top: Dimension::Points(50.),
+                    left: Dimension::from_points(50.),
+                    top: Dimension::from_points(50.),
                     ..Default::default()
                 },
             )?

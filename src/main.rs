@@ -33,7 +33,7 @@ impl Component for Chillscapes {
         Layout::absolute()
             .child(
                 self.game,
-                AbsoluteBounds::from(Surround::uniform(Dimension::Points(0.))),
+                AbsoluteBounds::from(Surround::uniform(Dimension::from_points(0.))),
             )?
             .layout()
     }
