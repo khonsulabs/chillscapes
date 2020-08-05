@@ -1,9 +1,14 @@
 use kludgine::prelude::*;
+mod element;
 mod game;
 use game::Game;
 
 fn main() {
     SingleWindowApplication::run(Chillscapes::default());
+}
+
+fn beats_per_second(tempo: f32) -> f32 {
+    60. / tempo
 }
 
 #[derive(Default)]

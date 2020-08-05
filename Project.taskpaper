@@ -7,10 +7,14 @@ Tasks:
 ✔ Make a click track using a structure that will be able to be used when loading loop configurations @done(2020-08-03 07:04)
 ✔ Create timekeeper that operates in beats @done(2020-08-03 07:04)
 ✘ Create test audio tracks @cancelled(2020-08-03 07:05) I'm ok with faking the click track for now
+✔ Fade in/out elements to the beat @done(2020-08-05 11:17)
 ☐ Sync element animation to the beat
 ☐ Aspect fit/fill should use alignment from style
 ☐ Create loop manifest
 ☐ Create main menu
 ☐ Add ability to remove components to Kludgine
+☐ Opacity for Text color should work
+☐ When inserting a new interrupting frame, the tweening should be from the current value, not the last frame's target value.
+☐ Figure out what I broke with hovering -- it's the render order being swapped 
 
 Brainstorming:
