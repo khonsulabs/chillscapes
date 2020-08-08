@@ -1,6 +1,6 @@
 use crate::{
-    beats_per_second,
     element::{Element, ElementCommand},
+    seconds_per_beat,
 };
 use kludgine::prelude::*;
 use rodio::{decoder::Decoder, source::Buffered, Source};
@@ -12,22 +12,27 @@ pub struct Game {
     tempo: f32,
     beats_per_loop: usize,
     click: Buffered<Decoder<Cursor<Vec<u8>>>>,
+    pads: Buffered<Decoder<Cursor<Vec<u8>>>>,
     elements: Vec<Entity<Element>>,
 }
 
 impl Default for Game {
     fn default() -> Self {
-        let click_sound = include_bytes!("../assets/ecton/click.ogg").to_vec();
+        let click_sound = include_bytes!("../assets/pxzel/space/02-ARPs.mp3").to_vec();
         let source = rodio::Decoder::new(Cursor::new(click_sound)).unwrap();
         let click = source.buffered();
+        let pads_sound = include_bytes!("../assets/pxzel/space/01-PADS.mp3").to_vec();
+        let source = rodio::Decoder::new(Cursor::new(pads_sound)).unwrap();
+        let pads = source.buffered();
 
         Self {
             backdrop: Entity::default(),
             elapsed: 0.,
             click,
+            pads,
             elements: Vec::default(),
-            tempo: 60.,
-            beats_per_loop: 4,
+            tempo: 83.,
+            beats_per_loop: 32,
         }
     }
 }
@@ -58,12 +63,18 @@ impl Component for Game {
                     self.beats_per_loop,
                     self.tempo,
                     self.click.clone(),
-                    vec![0., 1., 2., 3., 3.33, 3.66],
+                    (0..32).map(|beat| beat as f32).collect(),
                 ),
             )
             .insert()
             .await?,
         );
+
+        if let Some(device) = rodio::default_output_device() {
+            let sink = rodio::Sink::new(&device);
+            sink.append(self.pads.clone().repeat_infinite());
+            sink.detach();
+        }
 
         Ok(())
     }
@@ -72,7 +83,7 @@ impl Component for Game {
         if let Some(elapsed) = context.scene().elapsed().await {
             self.elapsed += elapsed.as_secs_f32();
 
-            let absolute_beat = self.elapsed / beats_per_second(self.tempo);
+            let absolute_beat = self.elapsed / seconds_per_beat(self.tempo);
             let measure = absolute_beat as usize / self.beats_per_loop;
             let beat = absolute_beat % self.beats_per_loop as f32;
 

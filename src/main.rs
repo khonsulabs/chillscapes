@@ -8,7 +8,11 @@ fn main() {
 }
 
 fn beats_per_second(tempo: f32) -> f32 {
-    60. / tempo
+    tempo / 60.
+}
+
+fn seconds_per_beat(tempo: f32) -> f32 {
+    1. / beats_per_second(tempo)
 }
 
 #[derive(Default)]
