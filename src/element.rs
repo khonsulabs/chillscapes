@@ -268,6 +268,18 @@ impl InteractiveComponent for Element {
                             );
                         }
                     }
+                } else {
+                    self.alpha_animator.push_frame(
+                        self.image
+                            .animate()
+                            .alpha(self.progress.min_percent(), LinearTransition),
+                        Instant::now(),
+                    );
+
+                    self.frame_animator.push_frame(
+                        self.image.animate().frame(0., LinearTransition),
+                        Instant::now(),
+                    );
                 }
             }
         }

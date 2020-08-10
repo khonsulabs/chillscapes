@@ -16,11 +16,13 @@ struct SpawnedElement {
 pub struct Game {
     backdrop: Entity<Image>,
     elapsed: f32,
+    measure: usize,
     tempo: f32,
     beats_per_loop: usize,
     pads: &'static Loop,
     elements: Vec<SpawnedElement>,
     pending_element: Option<Entity<Element>>,
+    lead: Option<rodio::Sink>,
 }
 
 impl Default for Game {
@@ -37,11 +39,13 @@ impl Default for Game {
         Self {
             backdrop: Entity::default(),
             elapsed: 0.,
+            measure: 0,
             pads,
             elements: Vec::default(),
             tempo: 83.,
             beats_per_loop: 32,
             pending_element: None,
+            lead: None,
         }
     }
 }
@@ -83,6 +87,7 @@ impl Game {
                 let mut rng = thread_rng();
                 let x = rng.gen_range(0., scene_size.width.to_f32());
                 let y = rng.gen_range(0., scene_size.height.to_f32());
+                println!("Left, Top: {}, {}", x, y);
                 AbsoluteBounds {
                     left: Dimension::from_points(x),
                     top: Dimension::from_points(y),
@@ -110,6 +115,26 @@ impl Game {
         }
 
         Ok(())
+    }
+
+    fn generate_leads(&mut self) {
+        let mut rng = thread_rng();
+        // Don't always play leads
+        if rng.gen_bool(0.66) {
+            let lead_loop = Loop::all()
+                .iter()
+                .filter(|l| l.kind == LoopKind::Leads)
+                .choose(&mut rng)
+                .unwrap();
+
+            if let Some(device) = rodio::default_output_device() {
+                let sink = rodio::Sink::new(&device);
+                sink.append(lead_loop.source.clone());
+                self.lead = Some(sink);
+            }
+        } else {
+            self.lead = None;
+        }
     }
 }
 
@@ -177,6 +202,10 @@ impl Component for Game {
 
             let absolute_beat = self.elapsed / seconds_per_beat(self.tempo);
             let measure = absolute_beat as usize / self.beats_per_loop;
+            if measure != self.measure {
+                self.generate_leads();
+                self.measure = measure;
+            }
             let beat = absolute_beat % self.beats_per_loop as f32;
 
             for element in &self.elements {
