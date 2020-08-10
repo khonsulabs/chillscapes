@@ -1,4 +1,5 @@
 use kludgine::prelude::*;
+mod assets;
 mod element;
 mod game;
 use game::Game;

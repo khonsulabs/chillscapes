@@ -1,0 +1,50 @@
+{ "frames": {
+   "SmallPlanet 0.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "sourceSize": { "w": 84, "h": 67 },
+    "duration": 100
+   },
+   "SmallPlanet 1.aseprite": {
+    "frame": { "x": 84, "y": 0, "w": 84, "h": 67 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "sourceSize": { "w": 84, "h": 67 },
+    "duration": 100
+   },
+   "SmallPlanet 2.aseprite": {
+    "frame": { "x": 168, "y": 0, "w": 84, "h": 67 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "sourceSize": { "w": 84, "h": 67 },
+    "duration": 100
+   },
+   "SmallPlanet 3.aseprite": {
+    "frame": { "x": 252, "y": 0, "w": 84, "h": 67 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "sourceSize": { "w": 84, "h": 67 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.23-x64",
+  "image": "SmallPlanet.png",
+  "format": "RGBA8888",
+  "size": { "w": 336, "h": 67 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Planet 1", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}

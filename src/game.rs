@@ -1,48 +1,124 @@
 use crate::{
-    element::{Element, ElementCommand},
+    assets::{Animation, Loop, LoopKind},
+    element::{Element, ElementCommand, ElementEvent},
     seconds_per_beat,
 };
 use kludgine::prelude::*;
-use rodio::{decoder::Decoder, source::Buffered, Source};
-use std::io::Cursor;
+use rand::prelude::*;
+use rodio::Source;
 
 pub struct Game {
     backdrop: Entity<Image>,
     elapsed: f32,
     tempo: f32,
     beats_per_loop: usize,
-    click: Buffered<Decoder<Cursor<Vec<u8>>>>,
-    pads: Buffered<Decoder<Cursor<Vec<u8>>>>,
+    pads: &'static Loop,
     elements: Vec<Entity<Element>>,
+    pending_element: Option<Entity<Element>>,
 }
 
 impl Default for Game {
     fn default() -> Self {
-        let click_sound = include_bytes!("../assets/pxzel/space/02-ARPs.mp3").to_vec();
-        let source = rodio::Decoder::new(Cursor::new(click_sound)).unwrap();
-        let click = source.buffered();
-        let pads_sound = include_bytes!("../assets/pxzel/space/01-PADS.mp3").to_vec();
-        let source = rodio::Decoder::new(Cursor::new(pads_sound)).unwrap();
-        let pads = source.buffered();
+        let pads = {
+            let mut rng = thread_rng();
+            Loop::all()
+                .iter()
+                .filter(|p| p.kind == LoopKind::PADs)
+                .choose(&mut rng)
+                .unwrap()
+        };
 
         Self {
             backdrop: Entity::default(),
             elapsed: 0.,
-            click,
             pads,
             elements: Vec::default(),
             tempo: 83.,
             beats_per_loop: 32,
+            pending_element: None,
         }
     }
 }
 
-impl StandaloneComponent for Game {}
+impl Game {
+    async fn spawn_new_element(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+        let scene_size = context.scene().size().await;
+        if scene_size.area().to_f32() > 0. {
+            let audio_loop = {
+                let mut rng = thread_rng();
+                Loop::all()
+                    .iter()
+                    .filter(|l| !l.beats.is_empty())
+                    .choose(&mut rng)
+                    .unwrap()
+            };
+
+            let animation = {
+                let animations = Animation::all().await;
+                let mut rng = thread_rng();
+                animations.iter().choose(&mut rng).unwrap()
+            };
+
+            let location = {
+                let mut rng = thread_rng();
+                let x = rng.gen_range(0., scene_size.width.to_f32());
+                let y = rng.gen_range(0., scene_size.height.to_f32());
+                AbsoluteBounds {
+                    left: Dimension::from_points(x),
+                    top: Dimension::from_points(y),
+                    ..Default::default()
+                }
+            };
+
+            let element = self
+                .new_entity(
+                    context,
+                    Element::new(self.beats_per_loop, self.tempo, animation, audio_loop),
+                )
+                .bounds(location)
+                .callback(GameMessage::ElementEvent)
+                .insert()
+                .await?;
+
+            self.elements.push(element);
+
+            self.pending_element = Some(element);
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum GameMessage {
+    ElementEvent(ElementEvent),
+}
+
+#[async_trait]
+impl InteractiveComponent for Game {
+    type Message = GameMessage;
+    type Input = ();
+    type Output = ();
+
+    async fn receive_message(
+        &mut self,
+        _context: &mut Context,
+        message: Self::Message,
+    ) -> KludgineResult<()> {
+        match message {
+            GameMessage::ElementEvent(ElementEvent::LoopLockedIn) => {
+                self.pending_element = None;
+            }
+        }
+
+        Ok(())
+    }
+}
 
 #[async_trait]
 impl Component for Game {
     async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
-        let backdrop_texture = include_texture!("../assets/ecton/backdrop.png")?;
+        let backdrop_texture = include_texture!("../assets/whitevault/space/backdrop.png")?;
         let sprite = Sprite::single_frame(backdrop_texture).await;
         self.backdrop = self
             .new_entity(
@@ -56,30 +132,22 @@ impl Component for Game {
             .insert()
             .await?;
 
-        self.elements.push(
-            self.new_entity(
-                context,
-                Element::new(
-                    self.beats_per_loop,
-                    self.tempo,
-                    self.click.clone(),
-                    (0..32).map(|beat| beat as f32).collect(),
-                ),
-            )
-            .insert()
-            .await?,
-        );
-
         if let Some(device) = rodio::default_output_device() {
             let sink = rodio::Sink::new(&device);
-            sink.append(self.pads.clone().repeat_infinite());
+            sink.append(self.pads.source.clone().repeat_infinite());
             sink.detach();
         }
+
+        self.spawn_new_element(context).await?;
 
         Ok(())
     }
 
     async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+        if self.pending_element.is_none() {
+            self.spawn_new_element(context).await?;
+        }
+
         if let Some(elapsed) = context.scene().elapsed().await {
             self.elapsed += elapsed.as_secs_f32();
 

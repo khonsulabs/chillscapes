@@ -1,9 +1,10 @@
-use crate::seconds_per_beat;
+use crate::{
+    assets::{Animation, Loop},
+    seconds_per_beat,
+};
 use kludgine::prelude::*;
-use rodio::{decoder::Decoder, source::Buffered};
 use std::{
     collections::VecDeque,
-    io::Cursor,
     time::{Duration, Instant},
 };
 
@@ -38,18 +39,18 @@ impl ElementProgress {
 
     pub fn min_percent(&self) -> f32 {
         match self {
-            ElementProgress::Pending(value) => value / 3.,
+            ElementProgress::Pending(value) => value / 3. * 0.9 + 0.1,
             ElementProgress::LockedIn => 1.,
         }
     }
 }
 
 pub struct Element {
+    animation: &'static Animation,
     beats_per_loop: usize,
     tempo: f32,
-    click: Buffered<Decoder<Cursor<Vec<u8>>>>,
-    beats: Vec<f32>,
-    star: Entity<Image>,
+    audio_loop: &'static Loop,
+    image: Entity<Image>,
     measure: Option<usize>,
     current_beat: Option<usize>,
     beats_to_hit: VecDeque<Instant>,
@@ -62,19 +63,19 @@ impl Element {
     pub fn new(
         beats_per_loop: usize,
         tempo: f32,
-        click: Buffered<Decoder<Cursor<Vec<u8>>>>,
-        beats: Vec<f32>,
+        animation: &'static Animation,
+        audio_loop: &'static Loop,
     ) -> Self {
         Self {
+            animation,
             beats_per_loop,
             tempo,
-            click,
-            beats,
+            audio_loop,
             measure: None,
             progress: ElementProgress::Pending(0.),
             current_beat: None,
             beats_to_hit: VecDeque::default(),
-            star: Entity::default(),
+            image: Entity::default(),
             alpha_animator: Default::default(),
             frame_animator: Default::default(),
         }
@@ -83,14 +84,14 @@ impl Element {
     fn next_beat_start(&self, mut current_beat: f32) -> (f32, f32) {
         let beat_start = match self.current_beat {
             Some(index) => {
-                if let Some(beat) = self.beats.get(index + 1) {
+                if let Some(beat) = self.audio_loop.beats.get(index + 1) {
                     *beat
                 } else {
                     current_beat -= self.beats_per_loop as f32;
-                    self.beats[0]
+                    self.audio_loop.beats[0]
                 }
             }
-            None => self.beats[0],
+            None => self.audio_loop.beats[0],
         };
 
         (beat_start, current_beat)
@@ -100,7 +101,8 @@ impl Element {
         if let ElementProgress::Pending(current_progress) = self.progress {
             // Add to progress so that 2 measures of perfect hits = 1.0
 
-            let mut progress = current_progress + 1. / (self.beats.len() as f32 * 2.) * factor;
+            let mut progress =
+                current_progress + 1. / (self.audio_loop.beats.len() as f32 / 2.) * factor;
 
             if progress < 0. {
                 progress = 0.;
@@ -131,25 +133,21 @@ impl Element {
 #[async_trait]
 impl Component for Element {
     async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
-        let sprite = include_aseprite_sprite!("../assets/ecton/star").await?;
-        self.star = self
-            .new_entity(context, Image::new(sprite))
+        self.image = self
+            .new_entity(context, Image::new(self.animation.sprite.clone()))
             .callback(ElementMessage::ImageEvent)
             .insert()
             .await?;
 
         self.alpha_animator.initialize_with(AnimationManager::new(
-            self.star
+            self.image
                 .animate()
                 .alpha(self.progress.min_percent(), LinearTransition),
         ));
 
-        self.frame_animator
-            .initialize_with(AnimationManager::new(self.star.animate().frame(
-                Some("Idle"),
-                0.,
-                LinearTransition,
-            )));
+        self.frame_animator.initialize_with(AnimationManager::new(
+            self.image.animate().frame(0., LinearTransition),
+        ));
         Ok(())
     }
 
@@ -185,7 +183,7 @@ impl InteractiveComponent for Element {
                 if self.measure != Some(measure) {
                     if let Some(device) = rodio::default_output_device() {
                         let sink = rodio::Sink::new(&device);
-                        sink.append(self.click.clone());
+                        sink.append(self.audio_loop.source.clone());
                         sink.detach();
                     }
                     self.current_beat = None;
@@ -196,7 +194,7 @@ impl InteractiveComponent for Element {
 
                 if adjusted_beat > next_beat_start {
                     let mut new_beat_index = self.current_beat.map(|beat| beat + 1).unwrap_or(0);
-                    if new_beat_index > self.beats.len() {
+                    if new_beat_index > self.audio_loop.beats.len() {
                         new_beat_index = 0;
                     }
                     self.current_beat = Some(new_beat_index);
@@ -217,7 +215,7 @@ impl InteractiveComponent for Element {
                             .checked_sub(Duration::from_millis(10))
                             .unwrap();
                         self.alpha_animator.push_frame(
-                            self.star
+                            self.image
                                 .animate()
                                 .alpha(self.progress.min_percent(), LinearTransition),
                             next_beat_start,
@@ -225,7 +223,7 @@ impl InteractiveComponent for Element {
 
                         // Fade into the target alpha
                         self.alpha_animator.push_frame(
-                            self.star
+                            self.image
                                 .animate()
                                 .alpha(self.progress.percent() * 0.7 + 0.3, LinearTransition),
                             next_beat_instant,
@@ -233,7 +231,7 @@ impl InteractiveComponent for Element {
 
                         // Fade out over 500ms
                         self.alpha_animator.push_frame(
-                            self.star
+                            self.image
                                 .animate()
                                 .alpha(self.progress.min_percent(), LinearTransition),
                             next_beat_instant
@@ -243,31 +241,23 @@ impl InteractiveComponent for Element {
 
                         // Execute the animation over 1/10th of a second
                         let frame_start = next_beat_instant
-                            .checked_sub(Duration::from_millis(50))
+                            .checked_sub(Duration::from_millis(150))
                             .unwrap();
                         self.frame_animator.push_frame(
-                            self.star
-                                .animate()
-                                .frame(Some("Normal"), 0., LinearTransition),
+                            self.image.animate().frame(0., LinearTransition),
                             frame_start,
                         );
 
                         let frame_end = next_beat_instant
-                            .checked_add(Duration::from_millis(50))
+                            .checked_add(Duration::from_millis(150))
                             .unwrap();
                         self.frame_animator.push_frame(
-                            self.star
-                                .animate()
-                                .frame(Some("Normal"), 1., LinearTransition),
-                            next_beat_start
-                                .checked_add(Duration::from_millis(50))
-                                .unwrap(),
+                            self.image.animate().frame(1., LinearTransition),
+                            frame_end,
                         );
 
                         self.frame_animator.push_frame(
-                            self.star
-                                .animate()
-                                .frame(Some("Idle"), 0., LinearTransition),
+                            self.image.animate().frame(0., LinearTransition),
                             frame_end.checked_add(Duration::from_millis(1)).unwrap(),
                         );
                     }
