@@ -57,6 +57,7 @@ pub struct Element {
     progress: ElementProgress,
     alpha_animator: RequiresInitialization<AnimationManager<ImageAlphaAnimation>>,
     frame_animator: RequiresInitialization<AnimationManager<ImageFrameAnimation>>,
+    playing_audio: Option<rodio::Sink>,
 }
 
 impl Element {
@@ -78,6 +79,7 @@ impl Element {
             image: Entity::default(),
             alpha_animator: Default::default(),
             frame_animator: Default::default(),
+            playing_audio: None,
         }
     }
 
@@ -181,85 +183,90 @@ impl InteractiveComponent for Element {
         match command {
             ElementCommand::SetBeat { beat, measure } => {
                 if self.measure != Some(measure) {
-                    if let Some(device) = rodio::default_output_device() {
-                        let sink = rodio::Sink::new(&device);
-                        sink.append(self.audio_loop.source.clone());
-                        sink.detach();
+                    if beat < 0.05 {
+                        if let Some(device) = rodio::default_output_device() {
+                            let sink = rodio::Sink::new(&device);
+                            sink.append(self.audio_loop.source.clone());
+                            self.playing_audio = Some(sink);
+                        }
                     }
                     self.current_beat = None;
                     self.measure = Some(measure);
                 }
 
-                let (next_beat_start, adjusted_beat) = self.next_beat_start(beat);
+                if self.playing_audio.is_some() {
+                    let (next_beat_start, adjusted_beat) = self.next_beat_start(beat);
 
-                if adjusted_beat > next_beat_start {
-                    let mut new_beat_index = self.current_beat.map(|beat| beat + 1).unwrap_or(0);
-                    if new_beat_index > self.audio_loop.beats.len() {
-                        new_beat_index = 0;
-                    }
-                    self.current_beat = Some(new_beat_index);
+                    if adjusted_beat > next_beat_start {
+                        let mut new_beat_index =
+                            self.current_beat.map(|beat| beat + 1).unwrap_or(0);
+                        if new_beat_index > self.audio_loop.beats.len() {
+                            new_beat_index = 0;
+                        }
+                        self.current_beat = Some(new_beat_index);
 
-                    let (next_beat, adjusted_beat) = self.next_beat_start(beat);
-                    let remaining_beats = next_beat - adjusted_beat;
-                    let remaining_seconds = seconds_per_beat(self.tempo) * remaining_beats;
-                    if remaining_seconds > 0. {
-                        let next_beat_instant = Instant::now()
-                            .checked_add(Duration::from_secs_f32(remaining_seconds))
-                            .unwrap();
+                        let (next_beat, adjusted_beat) = self.next_beat_start(beat);
+                        let remaining_beats = next_beat - adjusted_beat;
+                        let remaining_seconds = seconds_per_beat(self.tempo) * remaining_beats;
+                        if remaining_seconds > 0. {
+                            let next_beat_instant = Instant::now()
+                                .checked_add(Duration::from_secs_f32(remaining_seconds))
+                                .unwrap();
 
-                        self.beats_to_hit.push_back(next_beat_instant);
+                            self.beats_to_hit.push_back(next_beat_instant);
 
-                        // Start at 10 ms behind when the beat will hit, so that the fade-in happens over 10ms and it
-                        // peaks on the beat
-                        let next_beat_start = next_beat_instant
-                            .checked_sub(Duration::from_millis(10))
-                            .unwrap();
-                        self.alpha_animator.push_frame(
-                            self.image
-                                .animate()
-                                .alpha(self.progress.min_percent(), LinearTransition),
-                            next_beat_start,
-                        );
+                            // Start at 10 ms behind when the beat will hit, so that the fade-in happens over 10ms and it
+                            // peaks on the beat
+                            let next_beat_start = next_beat_instant
+                                .checked_sub(Duration::from_millis(10))
+                                .unwrap();
+                            self.alpha_animator.push_frame(
+                                self.image
+                                    .animate()
+                                    .alpha(self.progress.min_percent(), LinearTransition),
+                                next_beat_start,
+                            );
 
-                        // Fade into the target alpha
-                        self.alpha_animator.push_frame(
-                            self.image
-                                .animate()
-                                .alpha(self.progress.percent() * 0.7 + 0.3, LinearTransition),
-                            next_beat_instant,
-                        );
+                            // Fade into the target alpha
+                            self.alpha_animator.push_frame(
+                                self.image
+                                    .animate()
+                                    .alpha(self.progress.percent() * 0.7 + 0.3, LinearTransition),
+                                next_beat_instant,
+                            );
 
-                        // Fade out over 500ms
-                        self.alpha_animator.push_frame(
-                            self.image
-                                .animate()
-                                .alpha(self.progress.min_percent(), LinearTransition),
-                            next_beat_instant
-                                .checked_add(Duration::from_millis(500))
-                                .unwrap(),
-                        );
+                            // Fade out over 500ms
+                            self.alpha_animator.push_frame(
+                                self.image
+                                    .animate()
+                                    .alpha(self.progress.min_percent(), LinearTransition),
+                                next_beat_instant
+                                    .checked_add(Duration::from_millis(500))
+                                    .unwrap(),
+                            );
 
-                        // Execute the animation over 1/10th of a second
-                        let frame_start = next_beat_instant
-                            .checked_sub(Duration::from_millis(150))
-                            .unwrap();
-                        self.frame_animator.push_frame(
-                            self.image.animate().frame(0., LinearTransition),
-                            frame_start,
-                        );
+                            // Execute the animation over 1/10th of a second
+                            let frame_start = next_beat_instant
+                                .checked_sub(Duration::from_millis(150))
+                                .unwrap();
+                            self.frame_animator.push_frame(
+                                self.image.animate().frame(0., LinearTransition),
+                                frame_start,
+                            );
 
-                        let frame_end = next_beat_instant
-                            .checked_add(Duration::from_millis(150))
-                            .unwrap();
-                        self.frame_animator.push_frame(
-                            self.image.animate().frame(1., LinearTransition),
-                            frame_end,
-                        );
+                            let frame_end = next_beat_instant
+                                .checked_add(Duration::from_millis(150))
+                                .unwrap();
+                            self.frame_animator.push_frame(
+                                self.image.animate().frame(1., LinearTransition),
+                                frame_end,
+                            );
 
-                        self.frame_animator.push_frame(
-                            self.image.animate().frame(0., LinearTransition),
-                            frame_end.checked_add(Duration::from_millis(1)).unwrap(),
-                        );
+                            self.frame_animator.push_frame(
+                                self.image.animate().frame(0., LinearTransition),
+                                frame_end.checked_add(Duration::from_millis(1)).unwrap(),
+                            );
+                        }
                     }
                 }
             }

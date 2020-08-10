@@ -1,0 +1,50 @@
+{ "frames": {
+   "Planet3 0.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 20, "h": 34 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 34 },
+    "sourceSize": { "w": 20, "h": 34 },
+    "duration": 100
+   },
+   "Planet3 1.aseprite": {
+    "frame": { "x": 20, "y": 0, "w": 20, "h": 34 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 34 },
+    "sourceSize": { "w": 20, "h": 34 },
+    "duration": 100
+   },
+   "Planet3 2.aseprite": {
+    "frame": { "x": 40, "y": 0, "w": 20, "h": 34 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 34 },
+    "sourceSize": { "w": 20, "h": 34 },
+    "duration": 100
+   },
+   "Planet3 3.aseprite": {
+    "frame": { "x": 60, "y": 0, "w": 20, "h": 34 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 20, "h": 34 },
+    "sourceSize": { "w": 20, "h": 34 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.23-x64",
+  "image": "Planet3.png",
+  "format": "RGBA8888",
+  "size": { "w": 80, "h": 34 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Flattened", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}

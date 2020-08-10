@@ -8,6 +8,7 @@ use std::io::Cursor;
 
 #[derive(Clone, Debug)]
 pub struct Animation {
+    pub id: usize,
     pub sprite: Sprite,
 }
 
@@ -25,12 +26,49 @@ impl Animation {
             include_aseprite_sprite!("../assets/whitevault/space/SmallPlanet-Blue")
                 .await
                 .unwrap();
+        let crater = include_aseprite_sprite!("../assets/whitevault/space/Crater_1")
+            .await
+            .unwrap();
+        let planet2 = include_aseprite_sprite!("../assets/whitevault/space/Planet2")
+            .await
+            .unwrap();
+        let planet3 = include_aseprite_sprite!("../assets/whitevault/space/Planet3")
+            .await
+            .unwrap();
+        let planet4 = include_aseprite_sprite!("../assets/whitevault/space/Planet4")
+            .await
+            .unwrap();
+        let space_case = include_aseprite_sprite!("../assets/whitevault/space/Space_case")
+            .await
+            .unwrap();
         let animations = vec![
             Animation {
                 sprite: small_planet,
+                id: 0,
             },
             Animation {
                 sprite: small_blue_planet,
+                id: 1,
+            },
+            Animation {
+                sprite: crater,
+                id: 2,
+            },
+            Animation {
+                sprite: planet2,
+                id: 3,
+            },
+            Animation {
+                sprite: planet3,
+                id: 4,
+            },
+            Animation {
+                sprite: planet4,
+                id: 5,
+            },
+            Animation {
+                sprite: space_case,
+                id: 6,
             },
         ];
         ANIMATIONS.set(animations).unwrap();
@@ -49,6 +87,7 @@ pub enum LoopKind {
 
 #[derive(Clone)]
 pub struct Loop {
+    pub id: usize,
     pub kind: LoopKind,
     pub beats: Vec<f32>,
     pub source: Buffered<Decoder<Cursor<&'static [u8]>>>,
@@ -70,6 +109,7 @@ impl Loop {
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/01-PADS.mp3"
                     )),
+                    id: 0,
                 },
                 Loop {
                     kind: LoopKind::ARPs,
@@ -77,6 +117,7 @@ impl Loop {
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/02-ARPs.mp3"
                     )),
+                    id: 1,
                 },
                 Loop {
                     kind: LoopKind::Leads,
@@ -84,6 +125,7 @@ impl Loop {
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/03-Lead-A.mp3"
                     )),
+                    id: 2,
                 },
                 Loop {
                     kind: LoopKind::Leads,
@@ -91,6 +133,7 @@ impl Loop {
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/03-Lead-B.mp3"
                     )),
+                    id: 3,
                 },
                 Loop {
                     kind: LoopKind::Leads,
@@ -98,6 +141,7 @@ impl Loop {
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/03-Lead-C.mp3"
                     )),
+                    id: 4,
                 },
                 Loop {
                     kind: LoopKind::Drums,
@@ -105,6 +149,7 @@ impl Loop {
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/04-Drums.mp3"
                     )),
+                    id: 5,
                 },
                 Loop {
                     kind: LoopKind::Shakers,
@@ -112,6 +157,7 @@ impl Loop {
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/05-Shakers.mp3"
                     )),
+                    id: 6,
                 },
             ]
         })

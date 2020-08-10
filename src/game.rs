@@ -7,13 +7,19 @@ use kludgine::prelude::*;
 use rand::prelude::*;
 use rodio::Source;
 
+struct SpawnedElement {
+    element: Entity<Element>,
+    audio_loop: &'static Loop,
+    animation: &'static Animation,
+}
+
 pub struct Game {
     backdrop: Entity<Image>,
     elapsed: f32,
     tempo: f32,
     beats_per_loop: usize,
     pads: &'static Loop,
-    elements: Vec<Entity<Element>>,
+    elements: Vec<SpawnedElement>,
     pending_element: Option<Entity<Element>>,
 }
 
@@ -46,17 +52,31 @@ impl Game {
         if scene_size.area().to_f32() > 0. {
             let audio_loop = {
                 let mut rng = thread_rng();
-                Loop::all()
+                if let Some(audio_loop) = Loop::all()
                     .iter()
-                    .filter(|l| !l.beats.is_empty())
+                    .filter(|l| {
+                        !l.beats.is_empty()
+                            && !self.elements.iter().any(|el| el.audio_loop.kind == l.kind)
+                    })
                     .choose(&mut rng)
-                    .unwrap()
+                {
+                    audio_loop
+                } else {
+                    // Can't spawn a new one
+                    // TODO: Get rid of the oldest element and spawn a new one
+                    // But until we get more loops, it's kinda pointless, it rotates in new artwork
+                    return Ok(());
+                }
             };
 
             let animation = {
                 let animations = Animation::all().await;
                 let mut rng = thread_rng();
-                animations.iter().choose(&mut rng).unwrap()
+                animations
+                    .iter()
+                    .filter(|a| !self.elements.iter().any(|el| el.animation.id == a.id))
+                    .choose(&mut rng)
+                    .unwrap()
             };
 
             let location = {
@@ -80,7 +100,11 @@ impl Game {
                 .insert()
                 .await?;
 
-            self.elements.push(element);
+            self.elements.push(SpawnedElement {
+                element,
+                audio_loop,
+                animation,
+            });
 
             self.pending_element = Some(element);
         }
@@ -118,7 +142,7 @@ impl InteractiveComponent for Game {
 #[async_trait]
 impl Component for Game {
     async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
-        let backdrop_texture = include_texture!("../assets/whitevault/space/backdrop.png")?;
+        let backdrop_texture = include_texture!("../assets/whitevault/space/SceneOne.png")?;
         let sprite = Sprite::single_frame(backdrop_texture).await;
         self.backdrop = self
             .new_entity(
@@ -157,6 +181,7 @@ impl Component for Game {
 
             for element in &self.elements {
                 element
+                    .element
                     .send(ElementCommand::SetBeat { beat, measure })
                     .await?;
             }
