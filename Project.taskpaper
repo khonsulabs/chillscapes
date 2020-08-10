@@ -9,12 +9,18 @@ Tasks:
 ✘ Create test audio tracks @cancelled(2020-08-03 07:05) I'm ok with faking the click track for now
 ✔ Fade in/out elements to the beat @done(2020-08-05 11:17)
 ✔ Sync element animation to the beat @done(2020-08-07 10:31)
-☐ Aspect fit/fill should use alignment from style
-☐ Create loop manifest
+✔ Create loop manifest @done(2020-08-10 11:46)
+✔ Opacity for Text color should work @done(2020-08-10 11:46)
+✔ Figure out what I broke with hovering -- it's the render order being swapped @done(2020-08-10 11:46)
+☐ Fix positioning of elements -- figure out how to deal with window resizing too. Could Percent work?
+☐ Make positioning elements know where other elements are and prevent overlapping. What about window resizing? Could a floaty gravity approach work instead?
+☐ Add help label if player is missing beats too much
 ☐ Create main menu
 ☐ Add ability to remove components to Kludgine
-☐ Opacity for Text color should work
+☐ Make planet and craters be Leads - Requires better Z control
+☐ Add some sort of animation for click success and maybe beat miss?
+☐ Add some sort of animation or sound upon success of locking in an element?
 ☐ When inserting a new interrupting frame, the tweening should be from the current value, not the last frame's target value.
-☐ Figure out what I broke with hovering -- it's the render order being swapped 
+☐ Aspect fit/fill should use alignment from style
 
 Brainstorming:

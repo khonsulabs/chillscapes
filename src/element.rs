@@ -118,15 +118,17 @@ impl Element {
     }
 
     async fn deduct_missed_beats(&mut self, context: &mut Context) {
-        let now = Instant::now();
+        if self.progress.percent() < 1. {
+            let now = Instant::now();
 
-        if let Some(beat_instant) = self.beats_to_hit.front() {
-            let delta = instant_delta_in_millis(*beat_instant, now);
+            if let Some(beat_instant) = self.beats_to_hit.front() {
+                let delta = instant_delta_in_millis(*beat_instant, now);
 
-            if delta < -100 {
-                println!("Missed beat");
-                self.increment_progress(context, -1.).await;
-                self.beats_to_hit.pop_front();
+                if delta < -100 {
+                    println!("Missed beat");
+                    self.increment_progress(context, -1.).await;
+                    self.beats_to_hit.pop_front();
+                }
             }
         }
     }

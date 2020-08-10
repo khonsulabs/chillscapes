@@ -52,8 +52,8 @@ impl Default for Game {
 
 impl Game {
     async fn spawn_new_element(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
-        let scene_size = context.scene().size().await;
-        if scene_size.area().to_f32() > 0. {
+        let scene_size = context.scene().size().await.to_f32();
+        if scene_size.area() > 0. {
             let audio_loop = {
                 let mut rng = thread_rng();
                 if let Some(audio_loop) = Loop::all()
@@ -83,14 +83,18 @@ impl Game {
                     .unwrap()
             };
 
+            let frame_size = animation.sprite.size().await.unwrap();
+
             let location = {
                 let mut rng = thread_rng();
-                let x = rng.gen_range(0., scene_size.width.to_f32());
-                let y = rng.gen_range(0., scene_size.height.to_f32());
+                let x = rng.gen_range(0., scene_size.width - frame_size.width as f32);
+                let y = rng.gen_range(0., scene_size.height - frame_size.height as f32);
                 println!("Left, Top: {}, {}", x, y);
                 AbsoluteBounds {
                     left: Dimension::from_points(x),
                     top: Dimension::from_points(y),
+                    width: Dimension::from_points(frame_size.width as f32),
+                    height: Dimension::from_points(frame_size.height as f32),
                     ..Default::default()
                 }
             };
