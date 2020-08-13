@@ -82,12 +82,12 @@ pub enum LoopKind {
     ARPs,
     Leads,
     Drums,
-    Shakers,
+    Bass,
+    Piano,
 }
 
 #[derive(Clone)]
 pub struct Loop {
-    pub id: usize,
     pub kind: LoopKind,
     pub beats: Vec<f32>,
     pub source: Buffered<Decoder<Cursor<&'static [u8]>>>,
@@ -106,58 +106,130 @@ impl Loop {
                 Loop {
                     kind: LoopKind::PADs,
                     beats: Vec::default(),
+                    source: Self::create_source(include_bytes!("../assets/pxzel/space/Pads1.ogg")),
+                },
+                Loop {
+                    kind: LoopKind::PADs,
+                    beats: Vec::default(),
+                    source: Self::create_source(include_bytes!("../assets/pxzel/space/Pads2.ogg")),
+                },
+                Loop {
+                    kind: LoopKind::PADs,
+                    beats: Vec::default(),
                     source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/01-PADS.mp3"
+                        "../assets/pxzel/space/Pads2_complex.ogg"
                     )),
-                    id: 0,
+                },
+                Loop {
+                    kind: LoopKind::ARPs,
+                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    source: Self::create_source(include_bytes!("../assets/pxzel/space/Arp_es.ogg")),
                 },
                 Loop {
                     kind: LoopKind::ARPs,
                     beats: (0..32).map(|beat| beat as f32).collect(),
                     source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/02-ARPs.mp3"
+                        "../assets/pxzel/space/Arp_fths.ogg"
                     )),
-                    id: 1,
+                },
+                Loop {
+                    kind: LoopKind::ARPs,
+                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/Arp_u_p.ogg"
+                    )),
                 },
                 Loop {
                     kind: LoopKind::Leads,
                     beats: Vec::default(),
                     source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/03-Lead-A.mp3"
+                        "../assets/pxzel/space/lead1_simple.ogg"
                     )),
-                    id: 2,
                 },
                 Loop {
                     kind: LoopKind::Leads,
                     beats: Vec::default(),
                     source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/03-Lead-B.mp3"
+                        "../assets/pxzel/space/lead1_complex.ogg"
                     )),
-                    id: 3,
                 },
                 Loop {
                     kind: LoopKind::Leads,
                     beats: Vec::default(),
                     source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/03-Lead-C.mp3"
+                        "../assets/pxzel/space/lead1_med.ogg"
                     )),
-                    id: 4,
+                },
+                Loop {
+                    kind: LoopKind::Leads,
+                    beats: Vec::default(),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/lead2_med.ogg"
+                    )),
+                },
+                Loop {
+                    kind: LoopKind::Leads,
+                    beats: Vec::default(),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/lead2_simple.ogg"
+                    )),
                 },
                 Loop {
                     kind: LoopKind::Drums,
                     beats: (0..32).map(|beat| beat as f32).collect(),
                     source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/04-Drums.mp3"
+                        "../assets/pxzel/space/Drums_perc.ogg"
                     )),
-                    id: 5,
                 },
                 Loop {
-                    kind: LoopKind::Shakers,
+                    kind: LoopKind::Drums,
                     beats: (0..32).map(|beat| beat as f32).collect(),
                     source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/05-Shakers.mp3"
+                        "../assets/pxzel/space/Drums_ks.ogg"
                     )),
-                    id: 6,
+                },
+                Loop {
+                    kind: LoopKind::Bass,
+                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/Bass_ft.ogg"
+                    )),
+                },
+                Loop {
+                    kind: LoopKind::Bass,
+                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/Bass_oct.ogg"
+                    )),
+                },
+                Loop {
+                    kind: LoopKind::Bass,
+                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/Bass_qt.ogg"
+                    )),
+                },
+                Loop {
+                    kind: LoopKind::Bass,
+                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/Bass_sus.ogg"
+                    )),
+                },
+                Loop {
+                    kind: LoopKind::Piano,
+                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    source: Self::create_source(include_bytes!("../assets/pxzel/space/Piano1.ogg")),
+                },
+                Loop {
+                    kind: LoopKind::Piano,
+                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    source: Self::create_source(include_bytes!("../assets/pxzel/space/Piano2.ogg")),
+                },
+                Loop {
+                    kind: LoopKind::Piano,
+                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    source: Self::create_source(include_bytes!("../assets/pxzel/space/Piano3.ogg")),
                 },
             ]
         })
