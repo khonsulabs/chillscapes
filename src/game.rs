@@ -11,6 +11,7 @@ struct SpawnedElement {
     element: Entity<Element>,
     audio_loop: &'static Loop,
     animation: &'static Animation,
+    location: Rect,
 }
 
 pub struct Game {
@@ -51,25 +52,49 @@ impl Default for Game {
 }
 
 impl Game {
+    fn random_available_loop(&self) -> Option<&'static Loop> {
+        let mut rng = thread_rng();
+        Loop::all()
+            .iter()
+            .filter(|l| {
+                !l.beats.is_empty() && !self.elements.iter().any(|el| el.audio_loop.kind == l.kind)
+            })
+            .choose(&mut rng)
+    }
+
+    fn find_spawn_location(&self, scene_size: Size, frame_size: Size<u32>) -> Rect {
+        let mut rng = thread_rng();
+
+        loop {
+            let x = rng.gen_range(0., scene_size.width - frame_size.width as f32);
+            let y = rng.gen_range(0., scene_size.height - frame_size.height as f32);
+
+            let rect = Rect::sized(
+                Point::new(x, y),
+                Size::new(frame_size.width as f32, frame_size.height as f32),
+            );
+
+            if !self
+                .elements
+                .iter()
+                .any(|se| se.location.intersects_with(&rect))
+            {
+                return rect;
+            }
+        }
+    }
+
     async fn spawn_new_element(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         let scene_size = context.scene().size().await.to_f32();
         if scene_size.area() > 0. {
             let audio_loop = {
-                let mut rng = thread_rng();
-                if let Some(audio_loop) = Loop::all()
-                    .iter()
-                    .filter(|l| {
-                        !l.beats.is_empty()
-                            && !self.elements.iter().any(|el| el.audio_loop.kind == l.kind)
-                    })
-                    .choose(&mut rng)
-                {
+                if let Some(audio_loop) = self.random_available_loop() {
                     audio_loop
                 } else {
-                    // Can't spawn a new one
-                    // TODO: Get rid of the oldest element and spawn a new one
-                    // But until we get more loops, it's kinda pointless, it rotates in new artwork
-                    return Ok(());
+                    let oldest_element = self.elements.remove(0);
+                    context.remove(oldest_element.element).await;
+
+                    self.random_available_loop().unwrap()
                 }
             };
 
@@ -85,26 +110,20 @@ impl Game {
 
             let frame_size = animation.sprite.size().await.unwrap();
 
-            let location = {
-                let mut rng = thread_rng();
-                let x = rng.gen_range(0., scene_size.width - frame_size.width as f32);
-                let y = rng.gen_range(0., scene_size.height - frame_size.height as f32);
-                println!("Left, Top: {}, {}", x, y);
-                AbsoluteBounds {
-                    left: Dimension::from_points(x),
-                    top: Dimension::from_points(y),
-                    width: Dimension::from_points(frame_size.width as f32),
-                    height: Dimension::from_points(frame_size.height as f32),
-                    ..Default::default()
-                }
-            };
+            let location = self.find_spawn_location(scene_size, frame_size);
 
             let element = self
                 .new_entity(
                     context,
                     Element::new(self.beats_per_loop, self.tempo, animation, audio_loop),
                 )
-                .bounds(location)
+                .bounds(AbsoluteBounds {
+                    left: Dimension::from_points(location.origin.x),
+                    top: Dimension::from_points(location.origin.y),
+                    width: Dimension::from_points(location.size.width),
+                    height: Dimension::from_points(location.size.height),
+                    ..Default::default()
+                })
                 .callback(GameMessage::ElementEvent)
                 .insert()
                 .await?;
@@ -113,6 +132,7 @@ impl Game {
                 element,
                 audio_loop,
                 animation,
+                location,
             });
 
             self.pending_element = Some(element);

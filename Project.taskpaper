@@ -12,14 +12,22 @@ Tasks:
 ✔ Create loop manifest @done(2020-08-10 11:46)
 ✔ Opacity for Text color should work @done(2020-08-10 11:46)
 ✔ Figure out what I broke with hovering -- it's the render order being swapped @done(2020-08-10 11:46)
-☐ Fix positioning of elements -- figure out how to deal with window resizing too. Could Percent work?
-☐ Make positioning elements know where other elements are and prevent overlapping. What about window resizing? Could a floaty gravity approach work instead?
-☐ Add help label if player is missing beats too much
+✔ Fix positioning of elements -- figure out how to deal with window resizing too. Could Percent work? @done(2020-08-13 19:07)
+✔ Make positioning elements know where other elements are and prevent overlapping. What about window resizing? Could a floaty gravity approach work instead? @done(2020-08-13 19:07)
+✔ Add ability to remove components to Kludgine @done(2020-08-13 19:08)
+
 ☐ Create main menu
-☐ Add ability to remove components to Kludgine
-☐ Make planet and craters be Leads - Requires better Z control
-☐ Add some sort of animation for click success and maybe beat miss?
+
+☐ Make loops fade out when they're dismissed
+☐ Make elements "Solo" when hovered, so that you can tell which is which
+☐ Make leads never play when a new instrument is starting
+
+☐ Add help label if player is missing beats too much
 ☐ Add some sort of animation or sound upon success of locking in an element?
+☐ Add some sort of animation for click success and maybe beat miss?
+☐ Add rotation between pads
+
+☐ Make planet and craters be Leads - Requires better Z control
 ☐ When inserting a new interrupting frame, the tweening should be from the current value, not the last frame's target value.
 ☐ Aspect fit/fill should use alignment from style
 

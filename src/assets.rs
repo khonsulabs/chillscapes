@@ -122,19 +122,19 @@ impl Loop {
                 },
                 Loop {
                     kind: LoopKind::ARPs,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    beats: Self::repeat_beat_pattern(&[0.], 1),
                     source: Self::create_source(include_bytes!("../assets/pxzel/space/Arp_es.ogg")),
                 },
                 Loop {
                     kind: LoopKind::ARPs,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    beats: (0..16).map(|beat| (beat * 2) as f32).collect(),
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/Arp_fths.ogg"
                     )),
                 },
                 Loop {
                     kind: LoopKind::ARPs,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    beats: Self::repeat_beat_pattern(&[0., 0.5], 1),
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/Arp_u_p.ogg"
                     )),
@@ -174,64 +174,85 @@ impl Loop {
                         "../assets/pxzel/space/lead2_simple.ogg"
                     )),
                 },
+                // Loop {
+                //     kind: LoopKind::Drums,
+                //     beats: Self::repeat_beat_pattern(&[0.], 1),
+                //     source: Self::create_source(include_bytes!(
+                //         "../assets/pxzel/space/Drums_perc.ogg"
+                //     )),
+                // },
                 Loop {
                     kind: LoopKind::Drums,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    beats: Self::repeat_beat_pattern(&[0.], 1),
                     source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/Drums_perc.ogg"
+                        "../assets/pxzel/space/Drums_hh2.ogg"
                     )),
                 },
-                Loop {
-                    kind: LoopKind::Drums,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
-                    source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/Drums_ks.ogg"
-                    )),
-                },
+                // Loop {
+                //     kind: LoopKind::Drums,
+                //     beats: Self::repeat_beat_pattern(
+                //         &[0., 3.75, 4., 7.75, 8., 11.75, 12., 13.75, 14., 15.75],
+                //         16,
+                //     ),
+                //     source: Self::create_source(include_bytes!(
+                //         "../assets/pxzel/space/Drums_ks.ogg"
+                //     )),
+                // },
                 Loop {
                     kind: LoopKind::Bass,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    beats: Self::repeat_beat_pattern(&[0., 0.75, 1.5, 2.25, 3.0], 4),
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/Bass_ft.ogg"
                     )),
                 },
-                Loop {
-                    kind: LoopKind::Bass,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
-                    source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/Bass_oct.ogg"
-                    )),
-                },
-                Loop {
-                    kind: LoopKind::Bass,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
-                    source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/Bass_qt.ogg"
-                    )),
-                },
-                Loop {
-                    kind: LoopKind::Bass,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
-                    source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/Bass_sus.ogg"
-                    )),
-                },
+                // Loop {
+                //     kind: LoopKind::Bass,
+                //     beats: Self::repeat_beat_pattern(&[0.], 1),
+                //     source: Self::create_source(include_bytes!(
+                //         "../assets/pxzel/space/Bass_oct.ogg"
+                //     )),
+                // },
+                // Loop {
+                //     kind: LoopKind::Bass,
+                //     beats: Self::repeat_beat_pattern(&[0., 1., 2., 3., 3.33, 3.66], 4),
+                //     source: Self::create_source(include_bytes!(
+                //         "../assets/pxzel/space/Bass_qt.ogg"
+                //     )),
+                // },
+                // Loop {
+                //     kind: LoopKind::Bass,
+                //     beats: Self::repeat_beat_pattern(&[0.], 4),
+                //     source: Self::create_source(include_bytes!(
+                //         "../assets/pxzel/space/Bass_sus.ogg"
+                //     )),
+                // },
                 Loop {
                     kind: LoopKind::Piano,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    beats: Self::repeat_beat_pattern(&[0.], 4),
                     source: Self::create_source(include_bytes!("../assets/pxzel/space/Piano1.ogg")),
                 },
                 Loop {
                     kind: LoopKind::Piano,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    beats: Self::repeat_beat_pattern(&[0., 1.75], 4),
                     source: Self::create_source(include_bytes!("../assets/pxzel/space/Piano2.ogg")),
                 },
                 Loop {
                     kind: LoopKind::Piano,
-                    beats: (0..32).map(|beat| beat as f32).collect(),
+                    beats: Self::repeat_beat_pattern(&[0., 1.75, 3.], 1),
                     source: Self::create_source(include_bytes!("../assets/pxzel/space/Piano3.ogg")),
                 },
             ]
         })
+    }
+
+    fn repeat_beat_pattern(beats: &[f32], beat_pattern_length: usize) -> Vec<f32> {
+        let number_of_chunks = 32 / beat_pattern_length;
+        (1usize..number_of_chunks)
+            .map(|chunk| {
+                let offset = (chunk * beat_pattern_length) as f32;
+                beats.iter().map(|beat| beat + offset).collect::<Vec<_>>()
+            })
+            .flatten()
+            .collect()
     }
 }
