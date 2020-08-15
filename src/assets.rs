@@ -182,13 +182,6 @@ impl Loop {
                     kind: LoopKind::Drums,
                     beats: Self::repeat_beat_pattern(&[0.], 1),
                     source: Self::create_source(include_bytes!(
-                        "../assets/pxzel/space/Drums_perc.ogg"
-                    )),
-                },
-                Loop {
-                    kind: LoopKind::Drums,
-                    beats: Self::repeat_beat_pattern(&[0.], 1),
-                    source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/Drums_hh2.ogg"
                     )),
                 },

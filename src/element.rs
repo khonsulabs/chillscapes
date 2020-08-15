@@ -28,6 +28,8 @@ pub enum ElementEvent {
     LoopLockedIn,
     Soloing(Index),
     StoppingSolo,
+    Success(Point<Points>),
+    Failure(Option<Point<Points>>),
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -72,6 +74,7 @@ impl Element {
     pub fn new(
         beats_per_loop: usize,
         tempo: f32,
+        volume: f32,
         animation: &'static Animation,
         audio_loop: &'static Loop,
     ) -> Self {
@@ -88,7 +91,7 @@ impl Element {
             alpha_animator: Default::default(),
             frame_animator: Default::default(),
             playing_audio: None,
-            volume: 1.,
+            volume,
         }
     }
 
@@ -318,7 +321,9 @@ impl InteractiveComponent for Element {
         message: Self::Message,
     ) -> KludgineResult<()> {
         match message {
-            ElementMessage::ImageEvent(ControlEvent::Clicked(_)) => {
+            ElementMessage::ImageEvent(ControlEvent::Clicked {
+                window_position, ..
+            }) => {
                 let now = Instant::now();
 
                 if let Some(beat_instant) = self.beats_to_hit.pop_front() {
@@ -327,15 +332,21 @@ impl InteractiveComponent for Element {
                     match delta {
                         i128::MIN..=-101 | 101..=150 => {
                             // Missed the beat entirely or clicked a bit too soon
+                            self.callback(context, ElementEvent::Failure(Some(window_position)))
+                                .await;
                             self.increment_progress(context, -0.5).await;
                         }
                         -100..=100 => {
+                            self.callback(context, ElementEvent::Success(window_position))
+                                .await;
                             self.increment_progress(context, 1.).await;
                         }
                         151..=i128::MAX => {
                             // Far in the future, the click should count against the player
                             // but the beat should still be clickable.
                             println!("Too far in the future");
+                            self.callback(context, ElementEvent::Failure(Some(window_position)))
+                                .await;
                             self.increment_progress(context, -0.5).await;
                             self.beats_to_hit.push_front(beat_instant);
                         }

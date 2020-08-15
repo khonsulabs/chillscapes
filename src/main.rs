@@ -1,5 +1,6 @@
 use kludgine::prelude::*;
 mod assets;
+mod clicks;
 mod element;
 mod game;
 mod title;

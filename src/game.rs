@@ -2,6 +2,7 @@ use crate::{
     assets::{Animation, Loop, LoopKind},
     element::{Element, ElementCommand, ElementEvent},
     SceneState,
+    clicks::{Clicks, ClickCommand},
 };
 use kludgine::prelude::*;
 use rand::prelude::*;
@@ -17,11 +18,12 @@ struct SpawnedElement {
 pub struct Game {
     scene_state: KludgineHandle<SceneState>,
     help_text: Entity<Label>,
+    clicks: Entity<Clicks>,
     elements: Vec<SpawnedElement>,
     pending_element: Option<Entity<Element>>,
     lead: Option<rodio::Sink>,
     last_spawned_element_measure: Option<usize>,
-    should_spawn_new_element: bool,
+    next_loop_to_spawn: Option<&'static Loop>,
     volume: f32,
 }
 
@@ -36,9 +38,10 @@ impl Game {
             pending_element: None,
             lead: None,
             last_spawned_element_measure: None,
-            should_spawn_new_element: false,
+            next_loop_to_spawn: None,
             volume: MAX_VOLUME,
             help_text: Default::default(),
+            clicks: Default::default(),
         }
     }
 
@@ -78,20 +81,25 @@ impl Game {
         }
     }
 
+    fn pick_next_spawn(&mut self) {
+        self.next_loop_to_spawn = Some({
+            if let Some(audio_loop) = self.random_available_loop() {
+                audio_loop
+            } else {
+                let oldest_element = self.elements.get_mut(0).unwrap();
+                oldest_element.being_destroyed = true;
+
+                self.random_available_loop().unwrap()
+            }
+        });
+    }
+
     async fn spawn_new_element(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         let scene_state = self.scene_state.read().await;
         let scene_size = context.scene().size().await.to_f32();
         if scene_size.area() > 0. {
-            let audio_loop = {
-                if let Some(audio_loop) = self.random_available_loop() {
-                    audio_loop
-                } else {
-                    let oldest_element = self.elements.get_mut(0).unwrap();
-                    oldest_element.being_destroyed = true;
+            if let Some(audio_loop) = self.next_loop_to_spawn.take() {
 
-                    self.random_available_loop().unwrap()
-                }
-            };
 
             let animation = {
                 let animations = Animation::all().await;
@@ -118,6 +126,7 @@ impl Game {
                     Element::new(
                         scene_state.beats_per_loop,
                         scene_state.tempo,
+                        self.volume,
                         animation,
                         audio_loop,
                     ),
@@ -144,6 +153,7 @@ impl Game {
             self.pending_element = Some(element);
             self.last_spawned_element_measure = Some(scene_state.measure);
         }
+    }
 
         Ok(())
     }
@@ -230,6 +240,11 @@ impl InteractiveComponent for Game {
                         .await?;
                 }
             }
+            GameMessage::ElementEvent(ElementEvent::Success(window_position)) => {
+                self.clicks.send(ClickCommand::SetStatus { success: true, location: Some(window_position)}).await?;
+            }
+            GameMessage::ElementEvent(ElementEvent::Failure(window_position)) => {
+                self.clicks.send(ClickCommand::SetStatus { success: false, location: window_position}).await?;}
         }
 
         Ok(())
@@ -246,6 +261,14 @@ impl InteractiveComponent for Game {
                 beat,
                 measure,
             } => {
+                if is_new_measure {
+                    if self.pending_element.is_none() {
+                        self.pick_next_spawn();
+                    } else {
+                        self.generate_leads().await;
+                    }
+                }
+
                 for element in &self.elements {
                     if is_new_measure && element.being_destroyed {
                         context.remove(element.element).await;
@@ -262,11 +285,6 @@ impl InteractiveComponent for Game {
                 }
 
                 if is_new_measure {
-                    if self.pending_element.is_none() {
-                        self.should_spawn_new_element = true;
-                    } else {
-                        self.generate_leads().await;
-                    }
                     self.elements.retain(|e| !e.being_destroyed);
                 }
             }
@@ -287,14 +305,13 @@ impl Component for Game {
                 right: Dimension::from_points(16.),
                 ..Default::default()
             }).insert().await?;
+
+            self.clicks = self.new_entity(context, Clicks::default()).bounds(Surround::uniform(Dimension::from_points(0.)).into()).insert().await?;
         Ok(())
     }
 
     async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
-        if self.should_spawn_new_element {
             self.spawn_new_element(context).await?;
-            self.should_spawn_new_element = false;
-        }
         Ok(())
     }
 }

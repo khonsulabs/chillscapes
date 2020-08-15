@@ -19,13 +19,13 @@ Tasks:
 ☐ Create main menu
 
 ✔ Make loops fade out when they're dismissed @done(2020-08-14 18:19)
-☐ Make elements "Solo" when hovered, so that you can tell which is which
-☐ Make leads never play when a new instrument is starting
-☐ Add help label if player is missing beats too much and for when the game is starting
+✔ Make elements "Solo" when hovered, so that you can tell which is which @done(2020-08-15 09:25)
+✔ Make leads never play when a new instrument is starting @done(2020-08-15 09:25)
+✔ Add help label if player is missing beats too much and for when the game is starting @done(2020-08-15 09:25)
 
 
-☐ Add some sort of animation or sound upon success of locking in an element?
-☐ Add some sort of animation for click success and maybe beat miss?
+✔ Add some sort of animation or sound upon success of locking in an element? @done(2020-08-15 10:23)
+✔ Add some sort of animation for click success and maybe beat miss? @done(2020-08-15 10:23)
 ☐ Add rotation between pads
 
 ☐ Make planet and craters be Leads - Requires better Z control
