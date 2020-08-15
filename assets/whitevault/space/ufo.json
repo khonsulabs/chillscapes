@@ -1,0 +1,66 @@
+{ "frames": {
+   "ufo 0.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "sourceSize": { "w": 84, "h": 67 },
+    "duration": 100
+   },
+   "ufo 1.aseprite": {
+    "frame": { "x": 84, "y": 0, "w": 84, "h": 67 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "sourceSize": { "w": 84, "h": 67 },
+    "duration": 100
+   },
+   "ufo 2.aseprite": {
+    "frame": { "x": 168, "y": 0, "w": 84, "h": 67 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "sourceSize": { "w": 84, "h": 67 },
+    "duration": 100
+   },
+   "ufo 3.aseprite": {
+    "frame": { "x": 252, "y": 0, "w": 84, "h": 67 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "sourceSize": { "w": 84, "h": 67 },
+    "duration": 100
+   },
+   "ufo 4.aseprite": {
+    "frame": { "x": 336, "y": 0, "w": 84, "h": 67 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "sourceSize": { "w": 84, "h": 67 },
+    "duration": 100
+   },
+   "ufo 5.aseprite": {
+    "frame": { "x": 420, "y": 0, "w": 84, "h": 67 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 84, "h": 67 },
+    "sourceSize": { "w": 84, "h": 67 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.24-x64",
+  "image": "ufo.png",
+  "format": "RGBA8888",
+  "size": { "w": 504, "h": 67 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}

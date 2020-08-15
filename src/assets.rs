@@ -26,7 +26,7 @@ impl Animation {
             include_aseprite_sprite!("../assets/whitevault/space/SmallPlanet-Blue")
                 .await
                 .unwrap();
-        let crater = include_aseprite_sprite!("../assets/whitevault/space/Crater_1")
+        let ufo = include_aseprite_sprite!("../assets/whitevault/space/ufo")
             .await
             .unwrap();
         let planet2 = include_aseprite_sprite!("../assets/whitevault/space/Planet2")
@@ -41,6 +41,9 @@ impl Animation {
         let space_case = include_aseprite_sprite!("../assets/whitevault/space/Space_case")
             .await
             .unwrap();
+        let astro = include_aseprite_sprite!("../assets/whitevault/space/astro")
+            .await
+            .unwrap();
         let animations = vec![
             Animation {
                 sprite: small_planet,
@@ -50,10 +53,7 @@ impl Animation {
                 sprite: small_blue_planet,
                 id: 1,
             },
-            Animation {
-                sprite: crater,
-                id: 2,
-            },
+            Animation { sprite: ufo, id: 2 },
             Animation {
                 sprite: planet2,
                 id: 3,
@@ -69,6 +69,10 @@ impl Animation {
             Animation {
                 sprite: space_case,
                 id: 6,
+            },
+            Animation {
+                sprite: astro,
+                id: 7,
             },
         ];
         ANIMATIONS.set(animations).unwrap();
@@ -122,12 +126,12 @@ impl Loop {
                 },
                 Loop {
                     kind: LoopKind::ARPs,
-                    beats: Self::repeat_beat_pattern(&[0.], 1),
+                    beats: Self::repeat_beat_pattern(&[0., 0.5], 1),
                     source: Self::create_source(include_bytes!("../assets/pxzel/space/Arp_es.ogg")),
                 },
                 Loop {
                     kind: LoopKind::ARPs,
-                    beats: (0..16).map(|beat| (beat * 2) as f32).collect(),
+                    beats: Self::repeat_beat_pattern(&[0.], 1),
                     source: Self::create_source(include_bytes!(
                         "../assets/pxzel/space/Arp_fths.ogg"
                     )),
@@ -174,13 +178,13 @@ impl Loop {
                         "../assets/pxzel/space/lead2_simple.ogg"
                     )),
                 },
-                // Loop {
-                //     kind: LoopKind::Drums,
-                //     beats: Self::repeat_beat_pattern(&[0.], 1),
-                //     source: Self::create_source(include_bytes!(
-                //         "../assets/pxzel/space/Drums_perc.ogg"
-                //     )),
-                // },
+                Loop {
+                    kind: LoopKind::Drums,
+                    beats: Self::repeat_beat_pattern(&[0.], 1),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/Drums_perc.ogg"
+                    )),
+                },
                 Loop {
                     kind: LoopKind::Drums,
                     beats: Self::repeat_beat_pattern(&[0.], 1),
@@ -188,16 +192,6 @@ impl Loop {
                         "../assets/pxzel/space/Drums_hh2.ogg"
                     )),
                 },
-                // Loop {
-                //     kind: LoopKind::Drums,
-                //     beats: Self::repeat_beat_pattern(
-                //         &[0., 3.75, 4., 7.75, 8., 11.75, 12., 13.75, 14., 15.75],
-                //         16,
-                //     ),
-                //     source: Self::create_source(include_bytes!(
-                //         "../assets/pxzel/space/Drums_ks.ogg"
-                //     )),
-                // },
                 Loop {
                     kind: LoopKind::Bass,
                     beats: Self::repeat_beat_pattern(&[0., 0.75, 1.5, 2.25, 3.0], 4),
@@ -205,27 +199,27 @@ impl Loop {
                         "../assets/pxzel/space/Bass_ft.ogg"
                     )),
                 },
-                // Loop {
-                //     kind: LoopKind::Bass,
-                //     beats: Self::repeat_beat_pattern(&[0.], 1),
-                //     source: Self::create_source(include_bytes!(
-                //         "../assets/pxzel/space/Bass_oct.ogg"
-                //     )),
-                // },
-                // Loop {
-                //     kind: LoopKind::Bass,
-                //     beats: Self::repeat_beat_pattern(&[0., 1., 2., 3., 3.33, 3.66], 4),
-                //     source: Self::create_source(include_bytes!(
-                //         "../assets/pxzel/space/Bass_qt.ogg"
-                //     )),
-                // },
-                // Loop {
-                //     kind: LoopKind::Bass,
-                //     beats: Self::repeat_beat_pattern(&[0.], 4),
-                //     source: Self::create_source(include_bytes!(
-                //         "../assets/pxzel/space/Bass_sus.ogg"
-                //     )),
-                // },
+                Loop {
+                    kind: LoopKind::Bass,
+                    beats: Self::repeat_beat_pattern(&[0., 0.5], 1),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/Bass_oct.ogg"
+                    )),
+                },
+                Loop {
+                    kind: LoopKind::Bass,
+                    beats: Self::repeat_beat_pattern(&[0., 1., 2., 3., 3.33, 3.66], 4),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/Bass_qt.ogg"
+                    )),
+                },
+                Loop {
+                    kind: LoopKind::Bass,
+                    beats: Self::repeat_beat_pattern(&[0.], 4),
+                    source: Self::create_source(include_bytes!(
+                        "../assets/pxzel/space/Bass_sus.ogg"
+                    )),
+                },
                 Loop {
                     kind: LoopKind::Piano,
                     beats: Self::repeat_beat_pattern(&[0.], 4),
@@ -238,7 +232,7 @@ impl Loop {
                 },
                 Loop {
                     kind: LoopKind::Piano,
-                    beats: Self::repeat_beat_pattern(&[0., 1.75, 3.], 1),
+                    beats: Self::repeat_beat_pattern(&[0., 1.75, 3.], 4),
                     source: Self::create_source(include_bytes!("../assets/pxzel/space/Piano3.ogg")),
                 },
             ]
@@ -256,3 +250,6 @@ impl Loop {
             .collect()
     }
 }
+
+pub const BEATS_PER_LOOP: usize = 32;
+pub const TEMPO: f32 = 83.;

@@ -1,63 +1,57 @@
 use crate::{
     assets::{Animation, Loop, LoopKind},
     element::{Element, ElementCommand, ElementEvent},
-    seconds_per_beat,
+    SceneState,
 };
 use kludgine::prelude::*;
 use rand::prelude::*;
-use rodio::Source;
 
 struct SpawnedElement {
     element: Entity<Element>,
     audio_loop: &'static Loop,
     animation: &'static Animation,
     location: Rect,
+    being_destroyed: bool,
 }
 
 pub struct Game {
-    backdrop: Entity<Image>,
-    elapsed: f32,
-    measure: usize,
-    tempo: f32,
-    beats_per_loop: usize,
-    pads: &'static Loop,
+    scene_state: KludgineHandle<SceneState>,
+    help_text: Entity<Label>,
     elements: Vec<SpawnedElement>,
     pending_element: Option<Entity<Element>>,
     lead: Option<rodio::Sink>,
+    last_spawned_element_measure: Option<usize>,
+    should_spawn_new_element: bool,
+    volume: f32,
 }
 
-impl Default for Game {
-    fn default() -> Self {
-        let pads = {
-            let mut rng = thread_rng();
-            Loop::all()
-                .iter()
-                .filter(|p| p.kind == LoopKind::PADs)
-                .choose(&mut rng)
-                .unwrap()
-        };
-
-        Self {
-            backdrop: Entity::default(),
-            elapsed: 0.,
-            measure: 0,
-            pads,
-            elements: Vec::default(),
-            tempo: 83.,
-            beats_per_loop: 32,
-            pending_element: None,
-            lead: None,
-        }
-    }
-}
+const MAX_VOLUME: f32 = 0.7;
+const QUIET_VOLUME: f32 = 0.3;
 
 impl Game {
+    pub fn new(scene_state: KludgineHandle<SceneState>) -> Self {
+        Self {
+            scene_state,
+            elements: Vec::default(),
+            pending_element: None,
+            lead: None,
+            last_spawned_element_measure: None,
+            should_spawn_new_element: false,
+            volume: MAX_VOLUME,
+            help_text: Default::default(),
+        }
+    }
+
     fn random_available_loop(&self) -> Option<&'static Loop> {
         let mut rng = thread_rng();
         Loop::all()
             .iter()
             .filter(|l| {
-                !l.beats.is_empty() && !self.elements.iter().any(|el| el.audio_loop.kind == l.kind)
+                !l.beats.is_empty()
+                    && !self
+                        .elements
+                        .iter()
+                        .any(|el| !el.being_destroyed && el.audio_loop.kind == l.kind)
             })
             .choose(&mut rng)
     }
@@ -66,8 +60,8 @@ impl Game {
         let mut rng = thread_rng();
 
         loop {
-            let x = rng.gen_range(0., scene_size.width - frame_size.width as f32);
-            let y = rng.gen_range(0., scene_size.height - frame_size.height as f32);
+            let x = rng.gen_range(32., scene_size.width - frame_size.width as f32 - 64.);
+            let y = rng.gen_range(32., scene_size.height - frame_size.height as f32 - 64.);
 
             let rect = Rect::sized(
                 Point::new(x, y),
@@ -77,7 +71,7 @@ impl Game {
             if !self
                 .elements
                 .iter()
-                .any(|se| se.location.intersects_with(&rect))
+                .any(|se| !se.being_destroyed && se.location.intersects_with(&rect))
             {
                 return rect;
             }
@@ -85,14 +79,15 @@ impl Game {
     }
 
     async fn spawn_new_element(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
+        let scene_state = self.scene_state.read().await;
         let scene_size = context.scene().size().await.to_f32();
         if scene_size.area() > 0. {
             let audio_loop = {
                 if let Some(audio_loop) = self.random_available_loop() {
                     audio_loop
                 } else {
-                    let oldest_element = self.elements.remove(0);
-                    context.remove(oldest_element.element).await;
+                    let oldest_element = self.elements.get_mut(0).unwrap();
+                    oldest_element.being_destroyed = true;
 
                     self.random_available_loop().unwrap()
                 }
@@ -103,7 +98,12 @@ impl Game {
                 let mut rng = thread_rng();
                 animations
                     .iter()
-                    .filter(|a| !self.elements.iter().any(|el| el.animation.id == a.id))
+                    .filter(|a| {
+                        !self
+                            .elements
+                            .iter()
+                            .any(|el| !el.being_destroyed && el.animation.id == a.id)
+                    })
                     .choose(&mut rng)
                     .unwrap()
             };
@@ -115,7 +115,12 @@ impl Game {
             let element = self
                 .new_entity(
                     context,
-                    Element::new(self.beats_per_loop, self.tempo, animation, audio_loop),
+                    Element::new(
+                        scene_state.beats_per_loop,
+                        scene_state.tempo,
+                        animation,
+                        audio_loop,
+                    ),
                 )
                 .bounds(AbsoluteBounds {
                     left: Dimension::from_points(location.origin.x),
@@ -133,31 +138,45 @@ impl Game {
                 audio_loop,
                 animation,
                 location,
+                being_destroyed: false,
             });
 
             self.pending_element = Some(element);
+            self.last_spawned_element_measure = Some(scene_state.measure);
         }
 
         Ok(())
     }
 
-    fn generate_leads(&mut self) {
-        let mut rng = thread_rng();
-        // Don't always play leads
-        if rng.gen_bool(0.66) {
-            let lead_loop = Loop::all()
-                .iter()
-                .filter(|l| l.kind == LoopKind::Leads)
-                .choose(&mut rng)
-                .unwrap();
+    async fn generate_leads(&mut self) {
+        let scene_state = self.scene_state.read().await;
+        if self.last_spawned_element_measure.unwrap_or_default() != scene_state.measure {
+            let mut rng = thread_rng();
+            // Don't always play leads
+            if rng.gen_bool(0.66) {
+                let lead_loop = Loop::all()
+                    .iter()
+                    .filter(|l| l.kind == LoopKind::Leads)
+                    .choose(&mut rng)
+                    .unwrap();
 
-            if let Some(device) = rodio::default_output_device() {
-                let sink = rodio::Sink::new(&device);
-                sink.append(lead_loop.source.clone());
-                self.lead = Some(sink);
+                if let Some(device) = rodio::default_output_device() {
+                    let sink = rodio::Sink::new(&device);
+                    sink.append(lead_loop.source.clone());
+                    sink.set_volume(self.volume);
+                    self.lead = Some(sink);
+                }
+            } else {
+                self.lead = None;
             }
-        } else {
-            self.lead = None;
+        }
+    }
+
+    fn set_volume(&mut self, volume: f32) {
+        self.volume = volume;
+
+        if let Some(lead) = &self.lead {
+            lead.set_volume(volume);
         }
     }
 }
@@ -167,10 +186,19 @@ pub enum GameMessage {
     ElementEvent(ElementEvent),
 }
 
+#[derive(Clone, Debug)]
+pub enum GameCommand {
+    SetBeat {
+        is_new_measure: bool,
+        beat: f32,
+        measure: usize,
+    },
+}
+
 #[async_trait]
 impl InteractiveComponent for Game {
     type Message = GameMessage;
-    type Input = ();
+    type Input = GameCommand;
     type Output = ();
 
     async fn receive_message(
@@ -182,6 +210,66 @@ impl InteractiveComponent for Game {
             GameMessage::ElementEvent(ElementEvent::LoopLockedIn) => {
                 self.pending_element = None;
             }
+            GameMessage::ElementEvent(ElementEvent::Soloing(soloing_element)) => {
+                self.set_volume(QUIET_VOLUME);
+                for element in self.elements.iter() {
+                    if element.element.index() != soloing_element {
+                        element
+                            .element
+                            .send(ElementCommand::SetVolume(QUIET_VOLUME))
+                            .await?;
+                    }
+                }
+            }
+            GameMessage::ElementEvent(ElementEvent::StoppingSolo) => {
+                self.set_volume(MAX_VOLUME);
+                for element in self.elements.iter() {
+                    element
+                        .element
+                        .send(ElementCommand::SetVolume(self.volume))
+                        .await?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn receive_input(
+        &mut self,
+        context: &mut Context,
+        command: Self::Input,
+    ) -> KludgineResult<()> {
+        match command {
+            GameCommand::SetBeat {
+                is_new_measure,
+                beat,
+                measure,
+            } => {
+                for element in &self.elements {
+                    if is_new_measure && element.being_destroyed {
+                        context.remove(element.element).await;
+                    } else {
+                        element
+                            .element
+                            .send(ElementCommand::SetBeat {
+                                beat,
+                                measure,
+                                is_new_measure,
+                            })
+                            .await?;
+                    }
+                }
+
+                if is_new_measure {
+                    if self.pending_element.is_none() {
+                        self.should_spawn_new_element = true;
+                    } else {
+                        self.generate_leads().await;
+                    }
+                    self.elements.retain(|e| !e.being_destroyed);
+                }
+            }
         }
 
         Ok(())
@@ -191,55 +279,22 @@ impl InteractiveComponent for Game {
 #[async_trait]
 impl Component for Game {
     async fn initialize(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
-        let backdrop_texture = include_texture!("../assets/whitevault/space/SceneOne.png")?;
-        let sprite = Sprite::single_frame(backdrop_texture).await;
-        self.backdrop = self
-            .new_entity(
-                context,
-                Image::new(sprite)
-                    .options(ImageOptions::default().scaling(ImageScaling::AspectFill)),
-            )
-            .bounds(AbsoluteBounds::from(Surround::uniform(
-                Dimension::from_points(0.),
-            )))
-            .insert()
-            .await?;
-
-        if let Some(device) = rodio::default_output_device() {
-            let sink = rodio::Sink::new(&device);
-            sink.append(self.pads.source.clone().repeat_infinite());
-            sink.detach();
-        }
-
-        self.spawn_new_element(context).await?;
-
+        self.help_text = self.new_entity(context, 
+            Label::new("Click on each new element to the rhythm you hear. \nRelax and enjoy the music.")
+        ).bounds(AbsoluteBounds {
+                left: Dimension::from_points(16.),
+                top: Dimension::from_points(16.),
+                right: Dimension::from_points(16.),
+                ..Default::default()
+            }).insert().await?;
         Ok(())
     }
 
     async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
-        if self.pending_element.is_none() {
+        if self.should_spawn_new_element {
             self.spawn_new_element(context).await?;
+            self.should_spawn_new_element = false;
         }
-
-        if let Some(elapsed) = context.scene().elapsed().await {
-            self.elapsed += elapsed.as_secs_f32();
-
-            let absolute_beat = self.elapsed / seconds_per_beat(self.tempo);
-            let measure = absolute_beat as usize / self.beats_per_loop;
-            if measure != self.measure {
-                self.generate_leads();
-                self.measure = measure;
-            }
-            let beat = absolute_beat % self.beats_per_loop as f32;
-
-            for element in &self.elements {
-                element
-                    .element
-                    .send(ElementCommand::SetBeat { beat, measure })
-                    .await?;
-            }
-        }
-
         Ok(())
     }
 }

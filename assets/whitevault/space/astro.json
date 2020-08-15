@@ -1,0 +1,66 @@
+{ "frames": {
+   "astro 0.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 48, "h": 74 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 48, "h": 74 },
+    "sourceSize": { "w": 48, "h": 74 },
+    "duration": 100
+   },
+   "astro 1.aseprite": {
+    "frame": { "x": 48, "y": 0, "w": 48, "h": 74 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 48, "h": 74 },
+    "sourceSize": { "w": 48, "h": 74 },
+    "duration": 100
+   },
+   "astro 2.aseprite": {
+    "frame": { "x": 96, "y": 0, "w": 48, "h": 74 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 48, "h": 74 },
+    "sourceSize": { "w": 48, "h": 74 },
+    "duration": 100
+   },
+   "astro 3.aseprite": {
+    "frame": { "x": 144, "y": 0, "w": 48, "h": 74 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 48, "h": 74 },
+    "sourceSize": { "w": 48, "h": 74 },
+    "duration": 100
+   },
+   "astro 4.aseprite": {
+    "frame": { "x": 192, "y": 0, "w": 48, "h": 74 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 48, "h": 74 },
+    "sourceSize": { "w": 48, "h": 74 },
+    "duration": 100
+   },
+   "astro 5.aseprite": {
+    "frame": { "x": 240, "y": 0, "w": 48, "h": 74 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 48, "h": 74 },
+    "sourceSize": { "w": 48, "h": 74 },
+    "duration": 100
+   }
+ },
+ "meta": {
+  "app": "http://www.aseprite.org/",
+  "version": "1.2.24-x64",
+  "image": "astro.png",
+  "format": "RGBA8888",
+  "size": { "w": 288, "h": 74 },
+  "scale": "1",
+  "frameTags": [
+  ],
+  "layers": [
+   { "name": "Layer 1", "opacity": 255, "blendMode": "normal" }
+  ],
+  "slices": [
+  ]
+ }
+}
