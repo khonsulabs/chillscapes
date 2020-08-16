@@ -137,7 +137,6 @@ impl Element {
                 let delta = instant_delta_in_millis(*beat_instant, now);
 
                 if delta < -100 {
-                    println!("Missed beat");
                     self.increment_progress(context, -0.5).await;
                     self.beats_to_hit.pop_front();
                 }
@@ -303,8 +302,6 @@ impl InteractiveComponent for Element {
                             self.image.animate().frame(0., LinearTransition),
                             frame_end.checked_add(Duration::from_millis(1)).unwrap(),
                         );
-                    } else {
-                        println!("Negative remaining seconds");
                     }
                 }
             }
@@ -328,23 +325,21 @@ impl InteractiveComponent for Element {
 
                 if let Some(beat_instant) = self.beats_to_hit.pop_front() {
                     let delta = instant_delta_in_millis(beat_instant, now);
-                    println!("Click delta: {}", delta);
                     match delta {
-                        i128::MIN..=-101 | 101..=150 => {
+                        i128::MIN..=-151 | 151..=200 => {
                             // Missed the beat entirely or clicked a bit too soon
                             self.callback(context, ElementEvent::Failure(Some(window_position)))
                                 .await;
                             self.increment_progress(context, -0.5).await;
                         }
-                        -100..=100 => {
+                        -150..=150 => {
                             self.callback(context, ElementEvent::Success(window_position))
                                 .await;
                             self.increment_progress(context, 1.).await;
                         }
-                        151..=i128::MAX => {
+                        201..=i128::MAX => {
                             // Far in the future, the click should count against the player
                             // but the beat should still be clickable.
-                            println!("Too far in the future");
                             self.callback(context, ElementEvent::Failure(Some(window_position)))
                                 .await;
                             self.increment_progress(context, -0.5).await;

@@ -16,7 +16,7 @@ Tasks:
 ✔ Make positioning elements know where other elements are and prevent overlapping. What about window resizing? Could a floaty gravity approach work instead? @done(2020-08-13 19:07)
 ✔ Add ability to remove components to Kludgine @done(2020-08-13 19:08)
 
-☐ Create main menu
+✔ Create main menu @done(2020-08-15 10:29)
 
 ✔ Make loops fade out when they're dismissed @done(2020-08-14 18:19)
 ✔ Make elements "Solo" when hovered, so that you can tell which is which @done(2020-08-15 09:25)
