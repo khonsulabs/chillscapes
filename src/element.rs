@@ -178,8 +178,8 @@ impl Component for Element {
 
     async fn update(&mut self, context: &mut SceneContext) -> KludgineResult<()> {
         self.deduct_missed_beats(context).await;
-        self.alpha_animator.update().await;
-        self.frame_animator.update().await;
+        self.alpha_animator.update(context).await;
+        self.frame_animator.update(context).await;
         Ok(())
     }
 
