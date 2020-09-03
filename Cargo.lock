@@ -1091,7 +1091,7 @@ dependencies = [
 [[package]]
 name = "kludgine"
 version = "0.1.0"
-source = "git+https://github.com/khonsulabs/kludgine.git?branch=main#74335f4ad2c7ced50832879ee492370c47ea92c9"
+source = "git+https://github.com/khonsulabs/kludgine.git?rev=852072eeeef6a32179977815ec772e72a5cc5d3a#852072eeeef6a32179977815ec772e72a5cc5d3a"
 dependencies = [
  "anyhow",
  "approx",
@@ -1100,6 +1100,7 @@ dependencies = [
  "async-trait",
  "chrono",
  "crossbeam",
+ "derivative",
  "easy-parallel",
  "futures",
  "futures-timer",

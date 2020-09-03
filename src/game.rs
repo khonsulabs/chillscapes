@@ -143,7 +143,7 @@ impl Game {
                 .await?;
 
             self.elements.push(SpawnedElement {
-                element,
+                element: element.clone(),
                 audio_loop,
                 animation,
                 location,
@@ -271,7 +271,7 @@ impl InteractiveComponent for Game {
 
                 for element in &self.elements {
                     if is_new_measure && element.being_destroyed {
-                        context.remove(element.element).await;
+                        context.remove(&element.element).await;
                     } else {
                         element
                             .element

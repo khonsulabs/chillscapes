@@ -86,21 +86,21 @@ impl Component for TitleScreen {
 
         Layout::absolute()
             .child(
-                self.logo,
+                &self.logo,
                 AbsoluteBounds {
                     top: Dimension::from_points(window_size.height / 3.),
                     ..Default::default()
                 },
             )?
             .child(
-                self.start_button,
+                &self.start_button,
                 AbsoluteBounds {
                     top: Dimension::from_points(window_size.height / 3. * 2.),
                     ..Default::default()
                 },
             )?
             .child(
-                self.code_by,
+                &self.code_by,
                 AbsoluteBounds {
                     left: Dimension::from_points(16.),
                     bottom: Dimension::from_points(16.),
@@ -108,7 +108,7 @@ impl Component for TitleScreen {
                 },
             )?
             .child(
-                self.music_by,
+                &self.music_by,
                 AbsoluteBounds {
                     right: Dimension::from_points(16.),
                     bottom: Dimension::from_points(16.),
@@ -116,7 +116,7 @@ impl Component for TitleScreen {
                 },
             )?
             .child(
-                self.art_by,
+                &self.art_by,
                 AbsoluteBounds {
                     bottom: Dimension::from_points(16.),
                     ..Default::default()

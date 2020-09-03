@@ -38,7 +38,7 @@ impl Component for Clicks {
     ) -> KludgineResult<Box<dyn LayoutSolver>> {
         Layout::absolute()
             .child(
-                self.clicks,
+                &self.clicks,
                 AbsoluteBounds {
                     left: Dimension::from_points(self.location.x),
                     top: Dimension::from_points(self.location.y),

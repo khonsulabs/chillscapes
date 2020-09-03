@@ -97,7 +97,7 @@ impl InteractiveComponent for Chillscapes {
         match message {
             Message::StartGame => {
                 if let State::TitleScreen(title) = &self.state {
-                    context.remove(*title).await;
+                    context.remove(title).await;
                 }
 
                 self.state = State::StartGame;
@@ -169,15 +169,15 @@ impl Component for Chillscapes {
         let child = match &self.state {
             State::TitleScreen(title) => title.index(),
             State::InGame(game) => game.index(),
-            State::StartGame => unreachable!(),
+            State::StartGame => return Layout::none().layout(),
         };
         Layout::absolute()
             .child(
-                self.backdrop,
+                &self.backdrop,
                 AbsoluteBounds::from(Surround::uniform(Dimension::from_points(0.))),
             )?
             .child(
-                child,
+                &child,
                 AbsoluteBounds::from(Surround::uniform(Dimension::from_points(0.))),
             )?
             .layout()
